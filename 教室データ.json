@@ -1,0 +1,60 @@
+{
+  "buildings": {
+    "BT": {
+      "name": "ボアソナードタワー",
+      "short": "BT",
+      "prefix": null,
+      "roomFormat": "4桁数字（先頭2桁=階、後2桁=教室番号）",
+      "example": "0605 → 6階05番教室",
+      "floors": [3,4,5,6,7,8,9,10,11,12,13],
+      "directions": "正門を入って右手前方、キャンパス内で最も高い27階建てのタワーです。1階正面入口からエレベーターで各階へ。",
+      "floorMapPattern": "写真/フロアマップ/ボアソナードタワー/{floor}F.jpg",
+      "exteriorPhoto": "写真/校舎外観/ボアソナードタワー.jpg"
+    },
+    "S": {
+      "name": "外濠校舎",
+      "short": "S",
+      "prefix": "S",
+      "roomFormat": "S+3桁（1桁目=階、下2桁=教室番号）",
+      "example": "S201 → 2階01番教室",
+      "floors": [1,2,3,4,5,6],
+      "directions": "正門を入って正面の建物です。外濠通りに面した8階建てのガラス張りの校舎で、1階ホールから入ってエレベーターまたは階段で各階へ。",
+      "floorMapPattern": "写真/フロアマップ/外濠校舎/{floor}F.jpg",
+      "exteriorPhoto": "写真/校舎外観/外濠校舎.jpg"
+    },
+    "G": {
+      "name": "富士見ゲート",
+      "short": "G",
+      "prefix": "G",
+      "roomFormat": "G+3桁（1桁目=階、下2桁=教室番号）",
+      "example": "G601 → 6階01番教室",
+      "floors": [2,4,5,6],
+      "directions": "正門を入って左手の建物です。2016年竣工の新しい校舎で、1階にカフェテリア「つどひ」があります。エレベーターで各階へ。",
+      "floorMapPattern": "写真/フロアマップ/富士見ゲート/{floor}F.gif",
+      "exteriorPhoto": "写真/校舎外観/富士見ゲート.jpg"
+    },
+    "Y": {
+      "name": "大内山校舎",
+      "short": "Y",
+      "prefix": "Y",
+      "roomFormat": "Y+3桁（1桁目=階、下2桁=教室番号）",
+      "example": "Y501 → 5階01番教室",
+      "floors": [3,4,5,6,7,8],
+      "directions": "キャンパス中央広場の奥、南側にある建物です。正門から中央広場を通り抜けて進むと見えてきます。",
+      "floorMapPattern": "写真/フロアマップ/大内山校舎/{floor}F.png",
+      "exteriorPhoto": "写真/校舎外観/大内山校舎.jpg"
+    },
+    "F": {
+      "name": "富士見坂校舎",
+      "short": "F",
+      "prefix": "F",
+      "roomFormat": "F+3桁（1桁目=階、下2桁=教室番号）",
+      "example": "F301 → 3階01番教室",
+      "floors": [1,2,3,4,5],
+      "directions": "キャンパスの東側、外濠校舎の右手奥にある建物です。正門から入って右手方向に進み、坂を少し上ったところにあります。",
+      "floorMapPattern": "写真/フロアマップ/富士見坂校舎/{floor}F.jpg",
+      "exteriorPhoto": "写真/校舎外観/富士見坂校舎.jpg"
+    }
+  },
+  "parseRoom": "教室番号の頭文字でbuildings内のprefixとマッチング。BTは数字4桁のみ（prefix=null）。階数は: S/G/Y/F→1桁目、BT→先頭2桁。"
+}

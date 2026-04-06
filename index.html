@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>教室案内ガイド - 法政大学市ヶ谷</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--orange:#FF6600;--navy:#00205B;--bg:#F5F5F5;--card:#FFF;--text:#333;--sub:#666;--border:#E0E0E0;--radius:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,var(--navy) 0%,#003080 100%);color:#FFF;padding:16px 20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+header h1{font-size:18px;font-weight:700;letter-spacing:.5px}
+header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
+.container{padding:16px;max-width:480px;margin:0 auto}
+.section-label{font-size:13px;font-weight:600;color:var(--navy);margin:16px 0 8px;display:flex;align-items:center;gap:6px}
+.section-label::before{content:'';width:3px;height:14px;background:var(--orange);border-radius:2px}
+.input-area{display:flex;gap:8px;margin-bottom:8px}
+.room-input{flex:1;height:48px;border:2px solid var(--border);border-radius:var(--radius);padding:0 16px;font-size:18px;font-weight:600;color:var(--navy);outline:none;transition:border .15s}
+.room-input:focus{border-color:var(--orange)}
+.room-input::placeholder{color:#ccc;font-weight:400}
+.search-btn{height:48px;padding:0 20px;background:var(--orange);color:#FFF;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.search-btn:active{opacity:.8}
+.hint{font-size:11px;color:var(--sub);margin-bottom:16px}
+
+.result-card{background:var(--card);border-radius:var(--radius);box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;margin-bottom:16px}
+.result-header{background:linear-gradient(135deg,var(--navy),#003080);color:#FFF;padding:16px}
+.result-header .room-name{font-size:24px;font-weight:700;color:var(--orange)}
+.result-header .building-name{font-size:14px;margin-top:4px;opacity:.9}
+.result-body{padding:16px}
+.info-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.info-icon{width:32px;height:32px;background:var(--navy);color:#FFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.info-label{font-size:11px;color:var(--sub)}
+.info-value{font-size:15px;font-weight:600;color:var(--navy)}
+.directions{background:#F0F4FF;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;line-height:1.6;color:var(--text)}
+.photo-section{margin-top:12px}
+.photo-section img{width:100%;border-radius:8px;margin-bottom:8px}
+.photo-label{font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:600}
+.error-msg{text-align:center;padding:40px 20px;color:var(--sub)}
+.error-msg .icon{font-size:48px;margin-bottom:12px}
+.error-msg .msg{font-size:15px;font-weight:500}
+.error-msg .detail{font-size:12px;margin-top:8px;color:#999}
+
+.quick-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.quick-btn{padding:6px 12px;border:2px solid var(--border);border-radius:20px;background:var(--card);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.quick-btn:active{background:var(--orange);color:#FFF;border-color:var(--orange)}
+</style>
+</head>
+<body>
+<header>
+<h1>教室案内ガイド</h1>
+<p>法政大学 市ヶ谷キャンパス</p>
+</header>
+<div class="container">
+<div class="section-label">教室番号を入力</div>
+<div class="input-area">
+  <input type="text" class="room-input" id="roomInput" placeholder="例: S201, G502, 0605">
+  <button class="search-btn" id="searchBtn">検索</button>
+</div>
+<div class="hint">S201, G502, Y401, F301, 0605（ボアソナードタワー）など</div>
+
+<div class="section-label">よく検索される教室</div>
+<div class="quick-btns" id="quickBtns"></div>
+
+<div id="resultArea"></div>
+</div>
+
+<script>
+var BUILDINGS = {
+  S: {
+    name: '外濠校舎',
+    short: 'S',
+    floors: [1,2,3,4,5,6],
+    directions: '正門を入って正面の建物です。外濠通りに面した8階建てのガラス張りの校舎で、1階ホールから入ってエレベーターまたは階段で各階へ上がれます。',
+    floorExt: 'jpg'
+  },
+  G: {
+    name: '富士見ゲート',
+    short: 'G',
+    floors: [2,4,5,6],
+    directions: '正門を入って左手の建物です。2016年竣工の新しい校舎で、1階にカフェテリア「つどひ」があります。エレベーターで各階へ上がれます。',
+    floorExt: 'gif'
+  },
+  Y: {
+    name: '大内山校舎',
+    short: 'Y',
+    floors: [3,4,5,6,7,8],
+    directions: 'キャンパス中央広場の奥、南側にある建物です。正門から中央広場を通り抜けて進むと見えてきます。',
+    floorExt: 'png'
+  },
+  F: {
+    name: '富士見坂校舎',
+    short: 'F',
+    floors: [1,2,3,4,5],
+    directions: 'キャンパスの東側、外濠校舎の右手奥にある建物です。正門から入って右手方向に進み、坂を少し上ったところにあります。',
+    floorExt: 'jpg'
+  },
+  BT: {
+    name: 'ボアソナードタワー',
+    short: 'BT',
+    floors: [3,4,5,6,7,8,9,10,11,12,13],
+    directions: '正門を入って右手前方、キャンパス内で最も高い27階建てのタワーです。1階正面入口からエレベーターで各階へ上がれます。',
+    floorExt: 'jpg'
+  }
+};
+
+var QUICK_ROOMS = ['S201','S305','G502','G601','Y501','Y703','F301','F405','0605','0903','1100'];
+
+function parseRoom(input) {
+  var raw = input.trim().toUpperCase().replace(/\s+/g, '');
+  if (!raw) return null;
+
+  // BT付きパターン: BT0605 → 0605扱い
+  if (raw.match(/^BT\d{4}$/)) {
+    var nums = raw.substring(2);
+    var floor = parseInt(nums.substring(0, 2));
+    var room = nums.substring(2);
+    return { building: 'BT', floor: floor, room: room, display: nums, original: input.trim() };
+  }
+
+  // S, G, Y, F パターン
+  var prefixMatch = raw.match(/^([SGYF])(\d{3,})$/);
+  if (prefixMatch) {
+    var prefix = prefixMatch[1];
+    var digits = prefixMatch[2];
+    var floor = parseInt(digits.charAt(0));
+    var room = digits.substring(1);
+    return { building: prefix, floor: floor, room: room, display: raw, original: input.trim() };
+  }
+
+  // 数字のみ4桁 → ボアソナードタワー
+  var numMatch = raw.match(/^\d{4}$/);
+  if (numMatch) {
+    var floor = parseInt(raw.substring(0, 2));
+    var room = raw.substring(2);
+    return { building: 'BT', floor: floor, room: room, display: raw, original: input.trim() };
+  }
+
+  return null;
+}
+
+function search() {
+  var input = document.getElementById('roomInput').value;
+  var result = parseRoom(input);
+  var area = document.getElementById('resultArea');
+
+  if (!result) {
+    area.innerHTML = '<div class="error-msg"><div class="icon">&#x1F50D;</div><div class="msg">教室番号を認識できませんでした</div><div class="detail">S201, G502, Y401, F301, 0605 などの形式で入力してください</div></div>';
+    return;
+  }
+
+  var bldg = BUILDINGS[result.building];
+  if (!bldg) {
+    area.innerHTML = '<div class="error-msg"><div class="icon">&#x26A0;&#xFE0F;</div><div class="msg">対応していない校舎です</div></div>';
+    return;
+  }
+
+  var floorValid = bldg.floors.indexOf(result.floor) !== -1;
+
+  var html = '<div class="result-card">';
+  html += '<div class="result-header">';
+  html += '<div class="room-name">' + result.display + '</div>';
+  html += '<div class="building-name">' + bldg.name + '</div>';
+  html += '</div>';
+  html += '<div class="result-body">';
+
+  // 校舎情報
+  html += '<div class="info-row"><div class="info-icon">&#x1F3E2;</div><div><div class="info-label">校舎</div><div class="info-value">' + bldg.name + '（' + bldg.short + '）</div></div></div>';
+
+  // 階数
+  html += '<div class="info-row"><div class="info-icon">&#x1F4CD;</div><div><div class="info-label">階数</div><div class="info-value">' + result.floor + '階</div></div></div>';
+
+  // フロア有効性
+  if (!floorValid) {
+    html += '<div class="info-row"><div class="info-icon" style="background:#E74C3C">!</div><div><div class="info-label">注意</div><div class="info-value" style="color:#E74C3C">' + result.floor + '階に教室フロアはありません（教室階: ' + bldg.floors.join(',') + '階）</div></div></div>';
+  }
+
+  // 行き方
+  html += '<div class="directions">' + bldg.directions + '</div>';
+
+  // 校舎外観写真
+  html += '<div class="photo-section">';
+  html += '<div class="photo-label">校舎外観</div>';
+  html += '<img src="写真/校舎外観/' + bldg.name + '.jpg" alt="' + bldg.name + '">';
+  html += '</div>';
+
+  // フロアマップ
+  if (floorValid) {
+    html += '<div class="photo-section">';
+    html += '<div class="photo-label">' + result.floor + '階 フロアマップ</div>';
+    html += '<img src="写真/フロアマップ/' + bldg.name + '/' + result.floor + 'F.' + bldg.floorExt + '" alt="' + result.floor + '階フロアマップ">';
+    html += '</div>';
+  }
+
+  html += '</div></div>';
+  area.innerHTML = html;
+}
+
+// イベント
+document.getElementById('searchBtn').addEventListener('click', search);
+document.getElementById('roomInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') search();
+});
+
+// クイックボタン生成
+var quickArea = document.getElementById('quickBtns');
+QUICK_ROOMS.forEach(function(r) {
+  var btn = document.createElement('button');
+  btn.className = 'quick-btn';
+  btn.textContent = r;
+  btn.addEventListener('click', function() {
+    document.getElementById('roomInput').value = r;
+    search();
+  });
+  quickArea.appendChild(btn);
+});
+</script>
+</body>
+</html>
