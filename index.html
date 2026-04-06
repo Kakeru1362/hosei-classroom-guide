@@ -89,7 +89,10 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 <div class="section-label">食堂・カフェテリア</div>
 <ul class="facility-list" id="diningList"></ul>
 
+<div id="resultSection" style="display:none">
+<div class="section-label">検索結果</div>
 <div id="resultArea"></div>
+</div>
 </div>
 
 <script>
@@ -196,60 +199,11 @@ function parseRoom(input) {
   return null;
 }
 
-function search() {
-  var input = document.getElementById('roomInput').value;
-  var result = parseRoom(input);
+// --- 検索結果セクション表示 ---
+function showResult(html) {
+  var section = document.getElementById('resultSection');
   var area = document.getElementById('resultArea');
-
-  if (!result) {
-    area.innerHTML = '<div class="error-msg"><div class="icon">&#x1F50D;</div><div class="msg">教室番号を認識できませんでした</div><div class="detail">S201, G502, Y401, F301, 0605 などの形式で入力してください</div></div>';
-    return;
-  }
-
-  var bldg = BUILDINGS[result.building];
-  if (!bldg) {
-    area.innerHTML = '<div class="error-msg"><div class="icon">&#x26A0;&#xFE0F;</div><div class="msg">対応していない校舎です</div></div>';
-    return;
-  }
-
-  var floorValid = bldg.floors.indexOf(result.floor) !== -1;
-
-  var html = '<div class="result-card">';
-  html += '<div class="result-header">';
-  html += '<div class="room-name">' + result.display + '</div>';
-  html += '<div class="building-name">' + bldg.name + '</div>';
-  html += '</div>';
-  html += '<div class="result-body">';
-
-  // 校舎情報
-  html += '<div class="info-row"><div class="info-icon">&#x1F3E2;</div><div><div class="info-label">校舎</div><div class="info-value">' + bldg.name + '（' + bldg.short + '）</div></div></div>';
-
-  // 階数
-  html += '<div class="info-row"><div class="info-icon">&#x1F4CD;</div><div><div class="info-label">階数</div><div class="info-value">' + result.floor + '階</div></div></div>';
-
-  // フロア有効性
-  if (!floorValid) {
-    html += '<div class="info-row"><div class="info-icon" style="background:#E74C3C">!</div><div><div class="info-label">注意</div><div class="info-value" style="color:#E74C3C">' + result.floor + '階に教室フロアはありません（教室階: ' + bldg.floors.join(',') + '階）</div></div></div>';
-  }
-
-  // 行き方
-  html += '<div class="directions">' + bldg.directions + '</div>';
-
-  // 校舎外観写真
-  html += '<div class="photo-section">';
-  html += '<div class="photo-label">校舎外観</div>';
-  html += '<img src="写真/校舎外観/' + bldg.name + '.jpg" alt="' + bldg.name + '">';
-  html += '</div>';
-
-  // フロアマップ
-  if (floorValid) {
-    html += '<div class="photo-section">';
-    html += '<div class="photo-label">' + result.floor + '階 フロアマップ</div>';
-    html += '<img src="写真/フロアマップ/' + bldg.name + '/' + result.floor + 'F.' + bldg.floorExt + '" alt="' + result.floor + '階フロアマップ">';
-    html += '</div>';
-  }
-
-  html += '</div></div>';
+  section.style.display = '';
   area.innerHTML = html;
 }
 
@@ -302,12 +256,11 @@ function renderFavButtons() {
 
 function showResultInArea(roomStr) {
   var result = parseRoom(roomStr);
-  var area = document.getElementById('resultArea');
   if (!result) return;
   var bldg = BUILDINGS[result.building];
   if (!bldg) return;
-  area.innerHTML = buildResultHTML(result, bldg);
-  attachFavBtn(area);
+  showResult(buildResultHTML(result, bldg));
+  attachFavBtn(document.getElementById('resultArea'));
 }
 
 function buildResultHTML(result, bldg) {
@@ -349,21 +302,20 @@ function attachFavBtn(container) {
 function search() {
   var input = document.getElementById('roomInput').value;
   var result = parseRoom(input);
-  var area = document.getElementById('resultArea');
 
   if (!result) {
-    area.innerHTML = '<div class="error-msg"><div class="icon">&#x1F50D;</div><div class="msg">教室番号を認識できませんでした</div><div class="detail">S201, G502, Y401, F301, 0605 などの形式で入力してください</div></div>';
+    showResult('<div class="error-msg"><div class="icon">&#x1F50D;</div><div class="msg">教室番号を認識できませんでした</div><div class="detail">S201, G502, Y401, F301, 0605 などの形式で入力してください</div></div>');
     return;
   }
 
   var bldg = BUILDINGS[result.building];
   if (!bldg) {
-    area.innerHTML = '<div class="error-msg"><div class="icon">&#x26A0;&#xFE0F;</div><div class="msg">対応していない校舎です</div></div>';
+    showResult('<div class="error-msg"><div class="icon">&#x26A0;&#xFE0F;</div><div class="msg">対応していない校舎です</div></div>');
     return;
   }
 
-  area.innerHTML = buildResultHTML(result, bldg);
-  attachFavBtn(area);
+  showResult(buildResultHTML(result, bldg));
+  attachFavBtn(document.getElementById('resultArea'));
 }
 
 // イベント
@@ -397,7 +349,6 @@ function renderDiningList() {
 function showDiningDetail(idx) {
   var d = DINING[idx];
   var bldg = BUILDINGS[d.building];
-  var area = document.getElementById('resultArea');
 
   var html = '<div class="result-card">';
   html += '<div class="result-header">';
@@ -414,7 +365,7 @@ function showDiningDetail(idx) {
     html += '<img src="写真/校舎外観/' + bldg.name + '.jpg" alt="' + bldg.name + '"></div>';
   }
   html += '</div></div>';
-  area.innerHTML = html;
+  showResult(html);
 }
 
 // --- URLパラメータ連携 ---
