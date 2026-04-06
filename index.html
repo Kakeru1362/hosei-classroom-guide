@@ -170,6 +170,9 @@ function parseRoom(input) {
   var raw = input.trim().toUpperCase().replace(/\s+/g, '');
   if (!raw) return null;
 
+  // ハイフン除去（BT09-01 → BT0901, S-201 → S201）
+  raw = raw.replace(/[-‐‑–—―]/g, '');
+
   // BT付きパターン: BT0605 → 0605扱い
   if (raw.match(/^BT\d{4}$/)) {
     var nums = raw.substring(2);
