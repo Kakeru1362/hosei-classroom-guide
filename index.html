@@ -66,6 +66,13 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 .fav-remove{width:32px;height:32px;border:none;background:none;color:#ccc;font-size:18px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color .15s;flex-shrink:0}
 .fav-remove:hover{color:#E74C3C}
 .fav-empty{text-align:center;padding:40px 20px;color:var(--sub);font-size:13px}
+
+.facility-list{list-style:none}
+.facility-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border-radius:var(--radius);margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;transition:all .15s}
+.facility-item:active{background:#F0F4FF}
+.facility-icon{width:40px;height:40px;background:var(--orange);color:#FFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.facility-name{font-size:15px;font-weight:700;color:var(--navy)}
+.facility-detail{font-size:11px;color:var(--sub);margin-top:2px}
 </style>
 </head>
 <body>
@@ -76,6 +83,7 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 <div class="container">
 <div class="tabs">
   <div class="tab active" data-tab="search">検索</div>
+  <div class="tab" data-tab="dining">食堂</div>
   <div class="tab" data-tab="favorites">お気に入り</div>
 </div>
 
@@ -91,6 +99,12 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 <div class="quick-btns" id="quickBtns"></div>
 
 <div id="resultArea"></div>
+</div>
+
+<div class="tab-content" id="tab-dining">
+<div class="section-label">食堂・カフェテリア</div>
+<ul class="facility-list" id="diningList"></ul>
+<div id="diningResultArea"></div>
 </div>
 
 <div class="tab-content" id="tab-favorites">
@@ -140,6 +154,36 @@ var BUILDINGS = {
 };
 
 var QUICK_ROOMS = ['S201','S305','G502','G601','Y501','Y703','F301','F405','0605','0903','1100'];
+
+var DINING = [
+  {
+    name: 'フォレストガーデン',
+    location: 'ボアソナードタワー 地下1階',
+    seats: '約350席',
+    hours: '11:10〜15:00（月〜金）',
+    building: 'BT',
+    description: 'ガラス越しに外濠公園の緑を眺めながら食事ができる明るい食堂です。カフェテリア形式で、丼・カレー・麺類・主菜・惣菜などメニューが充実しています。',
+    directions: '正門を入って右手前方のボアソナードタワーへ。1階入口からエレベーターで地下1階へ降りてください。'
+  },
+  {
+    name: 'カフェテリア つどひ',
+    location: '富士見ゲート 3階',
+    seats: '約400席（テラス席あり）',
+    hours: '11:00〜14:30（月〜金）',
+    building: 'G',
+    description: '外濠を望む開放的なカフェテリアです。定食・丼・カレー・和麺・中華麺など豊富なメニューがあり、市ヶ谷キャンパス最大の食堂です。',
+    directions: '正門を入って左手の富士見ゲートへ。正門側入口は地下1階にあたるので、エスカレーターで3階まで上がってください。'
+  },
+  {
+    name: 'オレンジカフェ',
+    location: '富士見ゲート 1階',
+    seats: '約20席',
+    hours: '営業時間は掲示を確認',
+    building: 'G',
+    description: '正門が見渡せるカフェです。コーヒーや紅茶、法政大学オリジナルパンケーキをはじめとした軽食を提供しています。',
+    directions: '正門を入って左手の富士見ゲートへ。1階フロアにあります。'
+  }
+];
 
 function parseRoom(input) {
   var raw = input.trim().toUpperCase().replace(/\s+/g, '');
@@ -396,8 +440,65 @@ QUICK_ROOMS.forEach(function(r) {
   quickArea.appendChild(btn);
 });
 
+// --- 食堂 ---
+function renderDiningList() {
+  var list = document.getElementById('diningList');
+  var html = '';
+  DINING.forEach(function(d, idx) {
+    html += '<li class="facility-item" data-idx="' + idx + '">';
+    html += '<div class="facility-icon">&#x1F37D;</div>';
+    html += '<div><div class="facility-name">' + d.name + '</div>';
+    html += '<div class="facility-detail">' + d.location + ' / ' + d.seats + '</div>';
+    html += '<div class="facility-detail">' + d.hours + '</div></div>';
+    html += '</li>';
+  });
+  list.innerHTML = html;
+
+  document.querySelectorAll('.facility-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var idx = parseInt(this.dataset.idx);
+      showDiningDetail(idx);
+    });
+  });
+}
+
+function showDiningDetail(idx) {
+  var d = DINING[idx];
+  var bldg = BUILDINGS[d.building];
+  var area = document.getElementById('diningResultArea');
+
+  var html = '<div class="result-card">';
+  html += '<div class="result-header">';
+  html += '<div class="room-name">' + d.name + '</div>';
+  html += '<div class="building-name">' + d.location + '</div>';
+  html += '</div>';
+  html += '<div class="result-body">';
+  html += '<div class="info-row"><div class="info-icon">&#x1F552;</div><div><div class="info-label">営業時間</div><div class="info-value">' + d.hours + '</div></div></div>';
+  html += '<div class="info-row"><div class="info-icon">&#x1FA91;</div><div><div class="info-label">席数</div><div class="info-value">' + d.seats + '</div></div></div>';
+  html += '<div class="info-row"><div class="info-icon">&#x1F4DD;</div><div><div class="info-label">特徴</div><div class="info-value" style="font-size:13px;font-weight:400">' + d.description + '</div></div></div>';
+  html += '<div class="directions">' + d.directions + '</div>';
+  if (bldg) {
+    html += '<div class="photo-section"><div class="photo-label">校舎外観</div>';
+    html += '<img src="写真/校舎外観/' + bldg.name + '.jpg" alt="' + bldg.name + '"></div>';
+  }
+  html += '</div></div>';
+  area.innerHTML = html;
+}
+
+// --- URLパラメータ連携 ---
+function handleUrlParams() {
+  var params = new URLSearchParams(window.location.search);
+  var room = params.get('room');
+  if (room) {
+    document.getElementById('roomInput').value = room;
+    search();
+  }
+}
+
 // 初期化
 renderFavList();
+renderDiningList();
+handleUrlParams();
 </script>
 </body>
 </html>
