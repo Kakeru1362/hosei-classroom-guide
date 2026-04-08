@@ -80,10 +80,10 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 <div class="container">
 <div class="section-label">教室番号を入力</div>
 <div class="input-area">
-  <input type="text" class="room-input" id="roomInput" placeholder="例: S201, G502, 0605">
+  <input type="text" class="room-input" id="roomInput" placeholder="例: S201, G502, BT0605">
   <button class="search-btn" id="searchBtn">検索</button>
 </div>
-<div class="hint">S201, G502, Y401, F301, 0605（ボアソナードタワー）など</div>
+<div class="hint">S201, G502, Y401, F301, BT0605 など</div>
 
 <div id="favSection" style="display:none">
 <div class="section-label">お気に入り</div>
@@ -444,7 +444,7 @@ function search() {
   var result = parseRoom(input);
 
   if (!result) {
-    showResult('<div class="error-msg"><div class="icon">&#x1F50D;</div><div class="msg">教室番号を認識できませんでした</div><div class="detail">S201, G502, Y401, F301, 0605 などの形式で入力してください</div></div>');
+    showResult('<div class="error-msg"><div class="icon">&#x1F50D;</div><div class="msg">教室番号を認識できませんでした</div><div class="detail">S201, G502, Y401, F301, BT0605 などの形式で入力してください</div></div>');
     return;
   }
 
