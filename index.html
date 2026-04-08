@@ -66,6 +66,10 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 .facility-icon{width:40px;height:40px;background:var(--orange);color:#FFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .facility-name{font-size:15px;font-weight:700;color:var(--navy)}
 .facility-detail{font-size:11px;color:var(--sub);margin-top:2px}
+.toggle-header{cursor:pointer;user-select:none}
+.toggle-arrow{font-size:10px;transition:transform .2s;display:inline-block}
+.toggle-arrow.open{transform:rotate(90deg)}
+.hidden{display:none}
 </style>
 </head>
 <body>
@@ -82,15 +86,15 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 <div class="hint">S201, G502, Y401, F301, 0605（ボアソナードタワー）など</div>
 
 <div id="favSection" style="display:none">
-<div class="section-label">お気に入り教室</div>
+<div class="section-label">お気に入り</div>
 <div class="quick-btns" id="favBtns"></div>
 </div>
 
-<div class="section-label">自習スペース</div>
-<ul class="facility-list" id="studyList"></ul>
+<div class="section-label toggle-header" id="studyToggle">自習スペース <span class="toggle-arrow">&#x25B6;</span></div>
+<ul class="facility-list hidden" id="studyList"></ul>
 
-<div class="section-label">食堂・カフェテリア</div>
-<ul class="facility-list" id="diningList"></ul>
+<div class="section-label toggle-header" id="diningToggle">食堂・カフェテリア <span class="toggle-arrow">&#x25B6;</span></div>
+<ul class="facility-list hidden" id="diningList"></ul>
 
 <div id="resultSection" style="display:none">
 <div class="section-label">検索結果</div>
@@ -302,33 +306,59 @@ function parseRoom(input) {
 }
 
 // --- 検索結果セクション表示 ---
+function collapseAllLists() {
+  ['studyList', 'diningList'].forEach(function(id) {
+    var list = document.getElementById(id);
+    if (list) list.classList.add('hidden');
+  });
+  ['studyToggle', 'diningToggle'].forEach(function(id) {
+    var toggle = document.getElementById(id);
+    if (toggle) {
+      var arrow = toggle.querySelector('.toggle-arrow');
+      if (arrow) arrow.classList.remove('open');
+    }
+  });
+}
+
 function showResult(html) {
+  collapseAllLists();
   var section = document.getElementById('resultSection');
   var area = document.getElementById('resultArea');
   section.style.display = '';
   area.innerHTML = html;
+  setTimeout(function() {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
 }
 
 // --- お気に入り ---
 function getFavorites() {
-  try { return JSON.parse(localStorage.getItem('favRooms') || '[]'); } catch(e) { return []; }
+  try {
+    var raw = JSON.parse(localStorage.getItem('favRooms') || '[]');
+    // 旧形式（文字列配列）を新形式に変換
+    return raw.map(function(item) {
+      if (typeof item === 'string') return { type: 'room', key: item, label: item };
+      return item;
+    });
+  } catch(e) { return []; }
 }
 
 function saveFavorites(favs) {
   localStorage.setItem('favRooms', JSON.stringify(favs));
 }
 
-function isFavorite(display) {
-  return getFavorites().indexOf(display) !== -1;
+function isFavorite(type, key) {
+  return getFavorites().some(function(f) { return f.type === type && f.key === key; });
 }
 
-function toggleFavorite(display) {
+function toggleFavorite(type, key, label) {
   var favs = getFavorites();
-  var idx = favs.indexOf(display);
+  var idx = -1;
+  favs.forEach(function(f, i) { if (f.type === type && f.key === key) idx = i; });
   if (idx !== -1) {
     favs.splice(idx, 1);
   } else {
-    favs.push(display);
+    favs.push({ type: type, key: key, label: label });
   }
   saveFavorites(favs);
   renderFavButtons();
@@ -344,14 +374,22 @@ function renderFavButtons() {
   }
   section.style.display = '';
   var html = '';
-  favs.forEach(function(roomStr) {
-    html += '<button class="quick-btn" data-fav="' + roomStr + '">' + roomStr + '</button>';
+  favs.forEach(function(fav) {
+    html += '<button class="quick-btn" data-fav-type="' + fav.type + '" data-fav-key="' + fav.key + '">' + fav.label + '</button>';
   });
   area.innerHTML = html;
   area.querySelectorAll('.quick-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.getElementById('roomInput').value = this.dataset.fav;
-      search();
+      var type = this.dataset.favType;
+      var key = this.dataset.favKey;
+      if (type === 'room') {
+        document.getElementById('roomInput').value = key;
+        search();
+      } else if (type === 'study') {
+        showStudyDetail(parseInt(key));
+      } else if (type === 'dining') {
+        showDiningDetail(parseInt(key));
+      }
     });
   });
 }
@@ -367,13 +405,13 @@ function showResultInArea(roomStr) {
 
 function buildResultHTML(result, bldg) {
   var floorValid = bldg.floors.indexOf(result.floor) !== -1;
-  var favClass = isFavorite(result.display) ? ' saved' : '';
+  var favClass = isFavorite('room', result.display) ? ' saved' : '';
 
   var html = '<div class="result-card">';
   html += '<div class="result-header">';
   html += '<div class="room-name">' + result.display + '</div>';
   html += '<div class="building-name">' + bldg.name + '</div>';
-  html += '<button class="fav-btn' + favClass + '" data-room="' + result.display + '">&#x2605;</button>';
+  html += '<button class="fav-btn' + favClass + '" data-fav-type="room" data-fav-key="' + result.display + '" data-fav-label="' + result.display + '">&#x2605;</button>';
   html += '</div>';
   html += '<div class="result-body">';
   html += '<div class="info-row"><div class="info-icon">&#x1F3E2;</div><div><div class="info-label">校舎</div><div class="info-value">' + bldg.name + '（' + bldg.short + '）</div></div></div>';
@@ -395,7 +433,7 @@ function buildResultHTML(result, bldg) {
 function attachFavBtn(container) {
   container.querySelectorAll('.fav-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      toggleFavorite(this.dataset.room);
+      toggleFavorite(this.dataset.favType, this.dataset.favKey, this.dataset.favLabel);
       this.classList.toggle('saved');
     });
   });
@@ -451,11 +489,13 @@ function renderDiningList() {
 function showDiningDetail(idx) {
   var d = DINING[idx];
   var bldg = BUILDINGS[d.building];
+  var favClass = isFavorite('dining', String(idx)) ? ' saved' : '';
 
   var html = '<div class="result-card">';
   html += '<div class="result-header">';
   html += '<div class="room-name">' + d.name + '</div>';
   html += '<div class="building-name">' + d.location + '</div>';
+  html += '<button class="fav-btn' + favClass + '" data-fav-type="dining" data-fav-key="' + idx + '" data-fav-label="' + d.name + '">&#x2605;</button>';
   html += '</div>';
   html += '<div class="result-body">';
   html += '<div class="info-row"><div class="info-icon">&#x1F552;</div><div><div class="info-label">営業時間</div><div class="info-value">' + d.hours + '</div></div></div>';
@@ -472,6 +512,7 @@ function showDiningDetail(idx) {
   }
   html += '</div></div>';
   showResult(html);
+  attachFavBtn(document.getElementById('resultArea'));
 }
 
 // --- 自習スペース ---
@@ -499,11 +540,13 @@ function renderStudyList() {
 function showStudyDetail(idx) {
   var s = STUDY_SPACES[idx];
   var bldg = BUILDINGS[s.building];
+  var favClass = isFavorite('study', String(idx)) ? ' saved' : '';
 
   var html = '<div class="result-card">';
   html += '<div class="result-header">';
   html += '<div class="room-name">' + s.name + '</div>';
   html += '<div class="building-name">' + s.location + '</div>';
+  html += '<button class="fav-btn' + favClass + '" data-fav-type="study" data-fav-key="' + idx + '" data-fav-label="' + s.name + '">&#x2605;</button>';
   html += '</div>';
   html += '<div class="result-body">';
   html += '<div class="info-row"><div class="info-icon">&#x1F552;</div><div><div class="info-label">利用時間</div><div class="info-value">' + s.hours + '</div></div></div>';
@@ -520,6 +563,7 @@ function showStudyDetail(idx) {
   }
   html += '</div></div>';
   showResult(html);
+  attachFavBtn(document.getElementById('resultArea'));
 }
 
 // --- URLパラメータ連携 ---
@@ -533,9 +577,28 @@ function handleUrlParams() {
 }
 
 // 初期化
+// --- トグル開閉 ---
+function setupToggle(toggleId, listId) {
+  var toggle = document.getElementById(toggleId);
+  var list = document.getElementById(listId);
+  var arrow = toggle.querySelector('.toggle-arrow');
+  toggle.addEventListener('click', function() {
+    var isHidden = list.classList.contains('hidden');
+    if (isHidden) {
+      list.classList.remove('hidden');
+      arrow.classList.add('open');
+    } else {
+      list.classList.add('hidden');
+      arrow.classList.remove('open');
+    }
+  });
+}
+
 renderFavButtons();
 renderStudyList();
 renderDiningList();
+setupToggle('studyToggle', 'studyList');
+setupToggle('diningToggle', 'diningList');
 handleUrlParams();
 </script>
 </body>
