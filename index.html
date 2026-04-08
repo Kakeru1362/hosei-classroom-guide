@@ -86,6 +86,9 @@ header p{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
 <div class="quick-btns" id="favBtns"></div>
 </div>
 
+<div class="section-label">自習スペース</div>
+<ul class="facility-list" id="studyList"></ul>
+
 <div class="section-label">食堂・カフェテリア</div>
 <ul class="facility-list" id="diningList"></ul>
 
@@ -134,7 +137,7 @@ var BUILDINGS = {
   }
 };
 
-var QUICK_ROOMS = ['S201','S305','G502','G601','Y501','Y703','F301','F405','0605','0903','1100'];
+var QUICK_ROOMS = ['S201','S305','G502','G601','Y501','Y703','F301','F405','BT0605','BT0903','BT1100'];
 
 var DINING = [
   {
@@ -143,6 +146,7 @@ var DINING = [
     seats: '約350席',
     hours: '11:10〜15:00（月〜金）',
     building: 'BT',
+    floor: -1,
     description: 'ガラス越しに外濠公園の緑を眺めながら食事ができる明るい食堂です。カフェテリア形式で、丼・カレー・麺類・主菜・惣菜などメニューが充実しています。',
     directions: '正門を入って右手前方のボアソナードタワーへ。1階入口からエレベーターで地下1階へ降りてください。'
   },
@@ -152,6 +156,7 @@ var DINING = [
     seats: '約400席（テラス席あり）',
     hours: '11:00〜14:30（月〜金）',
     building: 'G',
+    floor: 3,
     description: '外濠を望む開放的なカフェテリアです。定食・丼・カレー・和麺・中華麺など豊富なメニューがあり、市ヶ谷キャンパス最大の食堂です。',
     directions: '正門を入って左手の富士見ゲートへ。正門側入口は地下1階にあたるので、エスカレーターで3階まで上がってください。'
   },
@@ -161,8 +166,102 @@ var DINING = [
     seats: '約20席',
     hours: '営業時間は掲示を確認',
     building: 'G',
+    floor: 1,
     description: '正門が見渡せるカフェです。コーヒーや紅茶、法政大学オリジナルパンケーキをはじめとした軽食を提供しています。',
     directions: '正門を入って左手の富士見ゲートへ。1階フロアにあります。'
+  }
+];
+
+var STUDY_SPACES = [
+  {
+    name: 'ピア・ラーニング・スペース',
+    location: 'ボアソナードタワー 3階',
+    seats: 'グループワーク・人工芝・ワークショップの3エリア',
+    hours: '平日 8:30〜18:50（試験期 〜16:50 / 長期休暇 10:30〜16:50）',
+    building: 'BT',
+    floor: 3,
+    description: 'グループワークや自習に使える学習支援スペースです。人工芝エリア・ワークショップエリア（要予約・学生証提示）・AVライブラリがあります。蓋付き飲料のみ持ち込み可。',
+    directions: 'ボアソナードタワー1階入口からエレベーターで3階へ。教育開発・学習支援センター（学習ステーション）が管理しています。'
+  },
+  {
+    name: 'ヘリオス（学生ホール）',
+    location: 'ボアソナードタワー 1階',
+    seats: '開放型多目的スペース',
+    hours: '建物開館時間に準ずる',
+    building: 'BT',
+    floor: 1,
+    description: '開放的な学生ホールです。イベントやライブにも利用されます。パンフレット配布コーナーも設置されています。',
+    directions: 'ボアソナードタワー1階、正面入口を入ってすぐのスペースです。'
+  },
+  {
+    name: 'ラーニングコモンズ',
+    location: '富士見坂校舎 1階（市ヶ谷図書館内）',
+    seats: 'PC・ホワイトボード・グループ学習室あり',
+    hours: '平日 9:00〜21:00 / 土曜 9:00〜17:30（時期により変動）',
+    building: 'F',
+    floor: 1,
+    description: '図書館内の学習スペースです。備付・貸出用PC、可動式机、プロジェクター付きグループ学習室があります。大学院生の学習アドバイザーに相談も可能。会話・討論OK。',
+    directions: '富士見坂校舎1階、市ヶ谷図書館のエリア内にあります。'
+  },
+  {
+    name: '情報カフェテリア',
+    location: '富士見坂校舎 2階',
+    seats: 'デスクトップPC多数・BYODスペースあり',
+    hours: 'カレンダーで公開（要確認）',
+    building: 'F',
+    floor: 2,
+    description: 'PCを使った自習スペースです。Adobe Creative Suite（Photoshop、Illustrator、Premiere Pro等）が使えます。BYODスペース（持込PC用・電源あり）では発話もOK。蓋付き飲料のみ可。',
+    directions: '富士見坂校舎2階です。オンデマンドプリンタも利用できます。'
+  },
+  {
+    name: 'Gラウンジ（Global Lounge）',
+    location: '大内山校舎 2階',
+    seats: '英語学習アドバイザー常駐',
+    hours: '月・火・木・金 10:00〜17:00（休憩 11:30〜12:30）',
+    building: 'Y',
+    floor: 2,
+    description: '外国語コミュニケーション空間です。ネイティブスピーカーの英語学習アドバイザーが常駐し、留学生との交流もできます。',
+    directions: '大内山校舎2階にあります。'
+  },
+  {
+    name: '富士見ゲート ラウンジ',
+    location: '富士見ゲート 4階・5階',
+    seats: 'フリースペース',
+    hours: '建物開館時間に準ずる',
+    building: 'G',
+    floor: 4,
+    description: '外濠側に面した明るいラウンジスペースです。6階には660平米の富士見屋上庭園（芝生）もあります。',
+    directions: '富士見ゲート4階・5階の外濠側です。エスカレーターまたはエレベーターで上がってください。'
+  },
+  {
+    name: '外濠校舎 スタディルーム',
+    location: '外濠校舎内',
+    seats: '自習室',
+    hours: '建物開館時間に準ずる',
+    building: 'S',
+    floor: 0,
+    description: '外濠校舎内にある自習室・学生ラウンジです。静かな環境で自習できます。',
+    directions: '外濠校舎内です。フロア案内を確認してください。'
+  },
+  {
+    name: 'ボアソナードタワー 26階ラウンジ',
+    location: 'ボアソナードタワー 26階',
+    seats: 'ラウンジ・展示スペース',
+    hours: '建物開館時間に準ずる',
+    building: 'BT',
+    floor: 26,
+    description: '高層階のラウンジです。スカイホール・会議室・コピーコーナーも同階にあり、ミュージアム・サテライトも併設されています。',
+    directions: 'ボアソナードタワー1階からエレベーターで26階へ。'
+  },
+  {
+    name: '市ヶ谷図書館',
+    location: '80年館（地下4階〜地上2階）',
+    seats: '約1,500席・PC約120台',
+    hours: '平日 9:00〜21:00 / 土曜 9:00〜17:30（時期により変動）',
+    building: 'BT',
+    floor: 0,
+    description: '6フロア構成の大規模図書館です。持込PC用電源エリア（約120席）、ノートPC貸出、視聴覚室があります。吹き抜けの開放的な空間です。',
+    directions: '80年館にあります。市ヶ谷田町校舎5階にも閲覧室があります。'
   }
 ];
 
@@ -173,12 +272,12 @@ function parseRoom(input) {
   // ハイフン除去（BT09-01 → BT0901, S-201 → S201）
   raw = raw.replace(/[-‐‑–—―]/g, '');
 
-  // BT付きパターン: BT0605 → 0605扱い
+  // BT付きパターン: BT0605
   if (raw.match(/^BT\d{4}$/)) {
     var nums = raw.substring(2);
     var floor = parseInt(nums.substring(0, 2));
     var room = nums.substring(2);
-    return { building: 'BT', floor: floor, room: room, display: nums, original: input.trim() };
+    return { building: 'BT', floor: floor, room: room, display: 'BT' + nums, original: input.trim() };
   }
 
   // S, G, Y, F パターン
@@ -196,7 +295,7 @@ function parseRoom(input) {
   if (numMatch) {
     var floor = parseInt(raw.substring(0, 2));
     var room = raw.substring(2);
-    return { building: 'BT', floor: floor, room: room, display: raw, original: input.trim() };
+    return { building: 'BT', floor: floor, room: room, display: 'BT' + raw, original: input.trim() };
   }
 
   return null;
@@ -366,6 +465,58 @@ function showDiningDetail(idx) {
   if (bldg) {
     html += '<div class="photo-section"><div class="photo-label">校舎外観</div>';
     html += '<img src="写真/校舎外観/' + bldg.name + '.jpg" alt="' + bldg.name + '"></div>';
+    if (d.floor > 0 && bldg.floors.indexOf(d.floor) !== -1) {
+      html += '<div class="photo-section"><div class="photo-label">' + d.floor + '階 フロアマップ</div>';
+      html += '<img src="写真/フロアマップ/' + bldg.name + '/' + d.floor + 'F.' + bldg.floorExt + '" alt="' + d.floor + '階フロアマップ"></div>';
+    }
+  }
+  html += '</div></div>';
+  showResult(html);
+}
+
+// --- 自習スペース ---
+function renderStudyList() {
+  var list = document.getElementById('studyList');
+  var html = '';
+  STUDY_SPACES.forEach(function(s, idx) {
+    html += '<li class="facility-item" data-study-idx="' + idx + '">';
+    html += '<div class="facility-icon" style="background:var(--navy)">&#x1F4DA;</div>';
+    html += '<div><div class="facility-name">' + s.name + '</div>';
+    html += '<div class="facility-detail">' + s.location + ' / ' + s.seats + '</div>';
+    html += '<div class="facility-detail">' + s.hours + '</div></div>';
+    html += '</li>';
+  });
+  list.innerHTML = html;
+
+  document.querySelectorAll('[data-study-idx]').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var idx = parseInt(this.dataset.studyIdx);
+      showStudyDetail(idx);
+    });
+  });
+}
+
+function showStudyDetail(idx) {
+  var s = STUDY_SPACES[idx];
+  var bldg = BUILDINGS[s.building];
+
+  var html = '<div class="result-card">';
+  html += '<div class="result-header">';
+  html += '<div class="room-name">' + s.name + '</div>';
+  html += '<div class="building-name">' + s.location + '</div>';
+  html += '</div>';
+  html += '<div class="result-body">';
+  html += '<div class="info-row"><div class="info-icon">&#x1F552;</div><div><div class="info-label">利用時間</div><div class="info-value">' + s.hours + '</div></div></div>';
+  html += '<div class="info-row"><div class="info-icon">&#x1FA91;</div><div><div class="info-label">設備</div><div class="info-value">' + s.seats + '</div></div></div>';
+  html += '<div class="info-row"><div class="info-icon">&#x1F4DD;</div><div><div class="info-label">特徴</div><div class="info-value" style="font-size:13px;font-weight:400">' + s.description + '</div></div></div>';
+  html += '<div class="directions">' + s.directions + '</div>';
+  if (bldg) {
+    html += '<div class="photo-section"><div class="photo-label">校舎外観</div>';
+    html += '<img src="写真/校舎外観/' + bldg.name + '.jpg" alt="' + bldg.name + '"></div>';
+    if (s.floor > 0 && bldg.floors.indexOf(s.floor) !== -1) {
+      html += '<div class="photo-section"><div class="photo-label">' + s.floor + '階 フロアマップ</div>';
+      html += '<img src="写真/フロアマップ/' + bldg.name + '/' + s.floor + 'F.' + bldg.floorExt + '" alt="' + s.floor + '階フロアマップ"></div>';
+    }
   }
   html += '</div></div>';
   showResult(html);
@@ -383,6 +534,7 @@ function handleUrlParams() {
 
 // 初期化
 renderFavButtons();
+renderStudyList();
 renderDiningList();
 handleUrlParams();
 </script>
